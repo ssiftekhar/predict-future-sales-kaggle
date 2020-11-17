@@ -31,3 +31,149 @@ sns.boxplot(sales['item_price'], flierprops=flierprops)
 # remove outliers
 sales = sales[(sales['item_price'] < 300000 ) & (sales['item_price'] > 0 )]
 sales = sales[(sales['item_cnt_day'] < 1000 ) & (sales['item_cnt_day'] > 0 )]
+
+#%% group by month and sum of sales per shop id and item id
+monthly_sales = sales.groupby(['date_block_num', 'shop_id', 'item_id']).sum()
+monthly_sales.head()
+monthly_sales.reset_index(inplace=True)
+monthly_sales.head()
+monthly_sales.rename(columns={'item_cnt_day': 'item_cnt_month'}, inplace=True)
+
+#%% creating test early and concat with my df
+test['date_block_num'] = 34
+test['date_block_num'] = test['date_block_num'].astype(np.int8)
+test['shop_id'] = test['shop_id'].astype(np.int8)
+test['item_id'] = test['item_id'].astype(np.int16)
+
+#%% concat test and df
+columns = ['date_block_num','shop_id','item_id']
+monthly_sales = pd.concat([monthly_sales, test], ignore_index=True, sort=False, keys=columns)
+monthly_sales.fillna(0, inplace=True)
+
+#%% merge item category into my df
+
+monthly_sales = pd.merge(monthly_sales, items, on=['item_id'], how='left')
+monthly_sales = monthly_sales.drop(columns=['ID', 'item_name'])
+
+#%% average item cnt per category
+avg_of_cat = monthly_sales.groupby(['date_block_num', 'item_category_id']).agg({'item_cnt_month': ['mean']})
+avg_of_cat.columns = [ 'date_cat_avg_item_cnt' ]
+avg_of_cat.reset_index(inplace=True)
+
+monthly_sales = pd.merge(monthly_sales, avg_of_cat, on=['date_block_num','item_category_id'], how='left')
+
+#%% item cnt average on date
+avg_month = monthly_sales.groupby(['date_block_num']).agg({'item_cnt_month': ['mean']})
+avg_month.columns = [ 'date_avg_item_cnt' ]
+avg_month.reset_index(inplace=True)
+
+monthly_sales = pd.merge(monthly_sales, avg_month, on=['date_block_num'], how='left')
+
+#%% avg item count on grouby on date and item
+date_item_avg = monthly_sales.groupby(['date_block_num', 'item_id']).agg({'item_cnt_month': ['mean']})
+date_item_avg.columns = ['date_item_avg_item_cnt']
+date_item_avg.reset_index(inplace=True)
+
+monthly_sales = pd.merge(monthly_sales, date_item_avg, on=['date_block_num', 'item_id'], how='left')
+
+#lag
+monthly_sales['date_item_avg_item_cnt_lag1'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['date_block_num', 'item_id'])['item_cnt_month'].shift(1))
+
+#%% create lags from dateblocknum
+monthly_sales['lag1'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(1))
+monthly_sales['lag2'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(2))
+monthly_sales['lag3'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(3))
+monthly_sales['lag4'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(4))
+monthly_sales['lag5'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(5))
+monthly_sales['lag6'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(6))
+monthly_sales['lag7'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(7))
+monthly_sales['lag8'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(8))
+monthly_sales['lag9'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(9))
+monthly_sales['lag10'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(10))
+monthly_sales['lag11'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(11))
+monthly_sales['lag12'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(12))
+
+# monthly_sales.iloc[monthly_sales['date_block_num']==0, 'lag1'] = np.nan
+
+monthly_sales = monthly_sales[monthly_sales["date_block_num"] > 11] # de første 12 har ikke lag verdier
+monthly_sales["lag1"] = monthly_sales['lag1'].fillna(0).astype(np.float16) #0 for nan values
+monthly_sales["lag2"] = monthly_sales['lag2'].fillna(0).astype(np.float16)
+monthly_sales["lag3"] = monthly_sales['lag3'].fillna(0).astype(np.float16)
+monthly_sales["lag4"] = monthly_sales['lag4'].fillna(0).astype(np.float16)
+monthly_sales["lag5"] = monthly_sales['lag5'].fillna(0).astype(np.float16)
+monthly_sales["lag6"] = monthly_sales['lag6'].fillna(0).astype(np.float16)
+monthly_sales["lag7"] = monthly_sales['lag7'].fillna(0).astype(np.float16) #0 for nan values
+monthly_sales["lag8"] = monthly_sales['lag8'].fillna(0).astype(np.float16)
+monthly_sales["lag9"] = monthly_sales['lag9'].fillna(0).astype(np.float16)
+monthly_sales["lag10"] = monthly_sales['lag10'].fillna(0).astype(np.float16)
+monthly_sales["lag11"] = monthly_sales['lag11'].fillna(0).astype(np.float16)
+monthly_sales["lag12"] = monthly_sales['lag12'].fillna(0).astype(np.float16)
+
+'''will create a fuxntion instead of manual creating lags'''
+
+#%% create column for revenue
+monthly_sales['revenue'] = monthly_sales['item_cnt_month']*monthly_sales['item_price']
+
+#%% scale columns 
+from sklearn.preprocessing import MinMaxScaler
+
+mm_columns = monthly_sales[['date_block_num', 'shop_id', 'item_id','item_price', 'revenue']]
+
+mm_cols = MinMaxScaler()
+mm_columns[['item_price_mm', 'revenue_mm']] = mm_cols.fit_transform(mm_columns[['item_price', 'revenue']])
+
+monthly_sales = pd.merge(monthly_sales, mm_columns, on=['date_block_num', 'shop_id', 'item_id'], how='left')
+monthly_sales = monthly_sales.drop(columns=['item_price_x', 'revenue_x', 'item_price_y', 'revenue_y'])
+
+#%% split into x and y, as well as df for kaggle test set for month 34
+monthly_sales[monthly_sales['date_block_num'] == 34].shape
+
+X_train = monthly_sales[monthly_sales['date_block_num'] < 33].drop(['item_cnt_month'], axis=1)
+y_train = monthly_sales[monthly_sales['date_block_num'] < 33]['item_cnt_month']
+X_test = monthly_sales[monthly_sales['date_block_num'] == 33].drop(['item_cnt_month'], axis=1)
+y_test = monthly_sales[monthly_sales['date_block_num'] == 33]['item_cnt_month']
+X_real = monthly_sales[monthly_sales['date_block_num'] == 34].drop(['item_cnt_month'], axis=1)
+
+#%% xgboost
+
+# import libaries
+import xgboost as xgb
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import time
+
+#define xgb model
+model = xgb.XGBRegressor(
+    max_depth=15,
+    learning_rate=0.05,
+    n_estimators=1500,
+    min_child_weight=0.5, 
+    colsample_bytree=0.8, 
+    subsample=0.8)
+
+# fit model
+ts = time.time()
+model.fit(
+    X_train, 
+    y_train, 
+    eval_metric="rmse", 
+    eval_set=[(X_train, y_train), (X_test, y_test)], 
+    verbose=True, 
+    early_stopping_rounds = 25)
+time.time() - ts
+
+# score train and test
+y_pred_train = model.predict(X_train)
+mean_absolute_error(y_train, y_pred_train)#0.15297548190934943
+np.sqrt(mean_squared_error(y_train, y_pred_train)) #0.41544912340325507
+
+y_pred_test = model.predict(X_test)
+mean_absolute_error(y_test, y_pred_test)  #0.43269980122533186
+np.sqrt(mean_squared_error(y_test, y_pred_test)) #3.3927447210573050
+
+# predict next month df
+y_real = model.predict(X_real)
+y_lr_real = lr_model.predict(X_real)
+
+# create csv for submission 
+submission = pd.DataFrame({"ID": test.index, "item_cnt_month": y_real})
+submission.to_csv('xgb_submission7.csv', index=False)
