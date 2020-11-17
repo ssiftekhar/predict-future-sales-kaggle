@@ -1,0 +1,29 @@
+#%% import essential libaries and packages
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+#%% read files
+items = pd.read_csv('items.csv')
+shops = pd.read_csv('shops.csv')
+categories = pd.read_csv('item_categories.csv')
+sales = pd.read_csv('sales_train.csv')
+# set index to ID to avoid droping it later
+test  = pd.read_csv('test.csv')
+sample_submission = pd.read_csv('sample_submission.csv')
+
+sales.head()
+
+#%% plotting data spread
+plt.figure(figsize=(10,4))
+plt.xlim(-100, 2500)
+flierprops = dict(marker='o', markerfacecolor='red', markersize=6,
+                  linestyle='none', markeredgecolor='blue')
+sns.boxplot(sales['item_cnt_day'], flierprops=flierprops)
+
+plt.figure(figsize=(10,4))
+plt.xlim(sales['item_price'].min(), sales['item_price'].max()*1.1)
+flierprops = dict(marker='o', markerfacecolor='red', markersize=6,
+                  linestyle='none', markeredgecolor='blue')
+sns.boxplot(sales['item_price'], flierprops=flierprops)
