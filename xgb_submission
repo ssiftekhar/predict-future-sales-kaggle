@@ -79,7 +79,7 @@ monthly_sales = pd.merge(monthly_sales, date_item_avg, on=['date_block_num', 'it
 #lag
 monthly_sales['date_item_avg_item_cnt_lag1'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['date_block_num', 'item_id'])['item_cnt_month'].shift(1))
 
-#%% create lags from dateblocknum
+#%% create lags from dateblocknum (A test. Write a function for lag creation)
 monthly_sales['lag1'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(1))
 monthly_sales['lag2'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(2))
 monthly_sales['lag3'] = (monthly_sales.sort_values(by=['date_block_num'], ascending=True).groupby(['shop_id', 'item_id'])['item_cnt_month'].shift(3))
@@ -109,7 +109,7 @@ monthly_sales["lag10"] = monthly_sales['lag10'].fillna(0).astype(np.float16)
 monthly_sales["lag11"] = monthly_sales['lag11'].fillna(0).astype(np.float16)
 monthly_sales["lag12"] = monthly_sales['lag12'].fillna(0).astype(np.float16)
 
-'''will create a fuxntion instead of manual creating lags'''
+'''will create a function instead of manual creating lags'''
 
 #%% create column for revenue
 monthly_sales['revenue'] = monthly_sales['item_cnt_month']*monthly_sales['item_price']
